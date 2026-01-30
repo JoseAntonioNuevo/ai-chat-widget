@@ -198,6 +198,38 @@ export interface ChatWidgetProps {
   height?: string;
 
   /**
+   * Enable user-resizable chat window
+   * When true, users can drag corners to resize
+   * Disabled automatically on mobile (<640px)
+   * @default true
+   */
+  resizable?: boolean;
+
+  /**
+   * Minimum width constraint for resizing
+   * @default '300px'
+   */
+  minWidth?: string;
+
+  /**
+   * Maximum width constraint for resizing
+   * @default '600px'
+   */
+  maxWidth?: string;
+
+  /**
+   * Minimum height constraint for resizing
+   * @default '400px'
+   */
+  minHeight?: string;
+
+  /**
+   * Maximum height constraint for resizing
+   * @default '80vh'
+   */
+  maxHeight?: string;
+
+  /**
    * Z-index for the widget
    * @default 50
    */

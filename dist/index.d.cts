@@ -225,6 +225,33 @@ interface ChatWidgetProps {
      */
     height?: string;
     /**
+     * Enable user-resizable chat window
+     * When true, users can drag corners to resize
+     * Disabled automatically on mobile (<640px)
+     * @default true
+     */
+    resizable?: boolean;
+    /**
+     * Minimum width constraint for resizing
+     * @default '300px'
+     */
+    minWidth?: string;
+    /**
+     * Maximum width constraint for resizing
+     * @default '600px'
+     */
+    maxWidth?: string;
+    /**
+     * Minimum height constraint for resizing
+     * @default '400px'
+     */
+    minHeight?: string;
+    /**
+     * Maximum height constraint for resizing
+     * @default '80vh'
+     */
+    maxHeight?: string;
+    /**
      * Z-index for the widget
      * @default 50
      */
@@ -357,7 +384,7 @@ interface ChatWidgetProps {
  * />
  * ```
  */
-declare function ChatWidget({ apiUrl, theme: themeProp, position, lang, labels: customLabels, greeting, defaultOpen, title: customTitle, placeholder: customPlaceholder, width, height, zIndex, icon, headerIcon, fontFamily: customFontFamily, showSuggestions, }: ChatWidgetProps): react_jsx_runtime.JSX.Element;
+declare function ChatWidget({ apiUrl, theme: themeProp, position, lang, labels: customLabels, greeting, defaultOpen, title: customTitle, placeholder: customPlaceholder, width, height, minWidth, maxWidth, minHeight, maxHeight, resizable, zIndex, icon, headerIcon, fontFamily: customFontFamily, showSuggestions, }: ChatWidgetProps): react_jsx_runtime.JSX.Element;
 
 /**
  * Built-in translations (English and Spanish)
@@ -434,13 +461,17 @@ interface ChatWindowProps {
     title?: string;
     headerIcon?: ReactNode;
     placeholder: string;
-    width: string;
-    height: string;
+    width: number;
+    height: number;
     zIndex: number;
     showSuggestions: boolean;
     isClosing?: boolean;
+    resizable: boolean;
+    isMobile: boolean;
+    isResizing: boolean;
+    onResizeStart: (corner: 'nw' | 'ne' | 'sw' | 'se', e: React.MouseEvent) => void;
 }
-declare function ChatWindow({ theme, position, messages, input, onInputChange, onSubmit, onRetry, onClose, onRestart, onSuggestionSelect, isLoading, error, labels, title, headerIcon, placeholder, width, height, zIndex, showSuggestions, isClosing, }: ChatWindowProps): react_jsx_runtime.JSX.Element;
+declare function ChatWindow({ theme, position, messages, input, onInputChange, onSubmit, onRetry, onClose, onRestart, onSuggestionSelect, isLoading, error, labels, title, headerIcon, placeholder, width, height, zIndex, showSuggestions, isClosing, resizable, isMobile, isResizing, onResizeStart, }: ChatWindowProps): react_jsx_runtime.JSX.Element;
 
 interface MessageBubbleProps {
     message: UIMessage;

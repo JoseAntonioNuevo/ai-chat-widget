@@ -6,3 +6,4 @@ export { LoadingIndicator } from './LoadingIndicator';
 export { ErrorMessage } from './ErrorMessage';
 export { SuggestionBox } from './SuggestionBox';
 export { ChatIcon, CloseIcon, SendIcon } from './Icons';
+export { ResizeHandles } from './ResizeHandles';

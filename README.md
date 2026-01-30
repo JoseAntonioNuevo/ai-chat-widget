@@ -393,6 +393,39 @@ Here's a complete reference of all props you can pass to `ChatWidget`:
 | `defaultOpen` | `boolean` | `false` | Start with chat window open |
 | `showSuggestions` | `boolean` | `true` | Show clickable suggestion boxes below AI responses |
 
+### Resizing Props
+
+The chat window is resizable by default. Users can drag any corner to resize.
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `resizable` | `boolean` | `true` | Enable user-resizable chat window |
+| `minWidth` | `string` | `'300px'` | Minimum width constraint |
+| `maxWidth` | `string` | `'600px'` | Maximum width constraint |
+| `minHeight` | `string` | `'400px'` | Minimum height constraint |
+| `maxHeight` | `string` | `'80vh'` | Maximum height constraint |
+
+```tsx
+// Disable resizing
+<ChatWidget apiUrl="/api/chat" resizable={false} />
+
+// Custom constraints
+<ChatWidget
+  apiUrl="/api/chat"
+  width="400px"
+  height="600px"
+  minWidth="320px"
+  maxWidth="800px"
+  minHeight="300px"
+  maxHeight="90vh"
+/>
+```
+
+**Notes:**
+- Resize is automatically disabled on mobile devices (< 640px width)
+- User-set sizes are persisted in localStorage
+- The `width` and `height` props set the initial/default size
+
 ### Icon Props
 
 | Prop | Type | Default | Description |

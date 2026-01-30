@@ -23,6 +23,8 @@ import { resolveTheme } from './themes/resolve';
 import { mergeLabels } from './i18n';
 import { ChatButton } from './components/ChatButton';
 import { ChatWindow } from './components/ChatWindow';
+import { useResize } from './hooks/useResize';
+import { useMobileDetect } from './hooks/useMobileDetect';
 
 // Error boundary to catch rendering failures
 class ChatErrorBoundary extends Component<
@@ -68,8 +70,13 @@ interface InternalChatWidgetProps {
   placeholder: string;
   greeting?: string;
   defaultOpen: boolean;
-  width: string;
-  height: string;
+  width: number;
+  height: number;
+  minWidth: number;
+  maxWidth: number;
+  minHeight: number;
+  maxHeight: number;
+  resizable: boolean;
   zIndex: number;
   lang: string;
   icon?: CustomIcons;
@@ -93,6 +100,11 @@ function ChatWidgetInternal({
   defaultOpen,
   width,
   height,
+  minWidth,
+  maxWidth,
+  minHeight,
+  maxHeight,
+  resizable,
   zIndex,
   lang,
   icon,
@@ -107,6 +119,18 @@ function ChatWidgetInternal({
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState(() => crypto.randomUUID());
   const [fontLoaded, setFontLoaded] = useState(!loadDefaultFont);
+
+  const isMobile = useMobileDetect();
+
+  const { width: currentWidth, height: currentHeight, isResizing, handleResizeStart } = useResize({
+    initialWidth: width,
+    initialHeight: height,
+    minWidth,
+    maxWidth,
+    minHeight,
+    maxHeight,
+    enabled: resizable && !isMobile,
+  });
 
   // Handle open/close animations
   useEffect(() => {
@@ -232,11 +256,15 @@ function ChatWidgetInternal({
           title={title}
           headerIcon={headerIcon}
           placeholder={placeholder}
-          width={width}
-          height={height}
+          width={currentWidth}
+          height={currentHeight}
           zIndex={zIndex}
           showSuggestions={showSuggestions}
           isClosing={isClosing}
+          resizable={resizable}
+          isMobile={isMobile}
+          isResizing={isResizing}
+          onResizeStart={handleResizeStart}
         />
       )}
 
@@ -314,6 +342,19 @@ function ChatWidgetInternal({
   );
 }
 
+function parseCssSize(value: string, fallback: number): number {
+  if (value.endsWith('px')) {
+    return parseInt(value, 10) || fallback;
+  }
+  if (value.endsWith('vh')) {
+    return (parseInt(value, 10) / 100) * (typeof window !== 'undefined' ? window.innerHeight : 800) || fallback;
+  }
+  if (value.endsWith('vw')) {
+    return (parseInt(value, 10) / 100) * (typeof window !== 'undefined' ? window.innerWidth : 1200) || fallback;
+  }
+  return parseInt(value, 10) || fallback;
+}
+
 /**
  * AI Chat Widget
  *
@@ -363,8 +404,13 @@ export function ChatWidget({
   defaultOpen = false,
   title: customTitle,
   placeholder: customPlaceholder,
-  width = '380px',
-  height = '500px',
+  width = '420px',
+  height = '600px',
+  minWidth = '300px',
+  maxWidth = '600px',
+  minHeight = '400px',
+  maxHeight = '80vh',
+  resizable = true,
   zIndex = 50,
   icon,
   headerIcon,
@@ -383,6 +429,14 @@ export function ChatWidget({
   const fontFamily = customFontFamily ?? DEFAULT_FONT_FAMILY;
   const loadDefaultFont = !customFontFamily; // Only load Inter if no custom font
 
+  // Parse CSS sizes to pixels
+  const widthPx = parseCssSize(width, 380);
+  const heightPx = parseCssSize(height, 500);
+  const minWidthPx = parseCssSize(minWidth, 300);
+  const maxWidthPx = parseCssSize(maxWidth, 600);
+  const minHeightPx = parseCssSize(minHeight, 400);
+  const maxHeightPx = parseCssSize(maxHeight, typeof window !== 'undefined' ? window.innerHeight * 0.8 : 600);
+
   return (
     <ChatErrorBoundary>
       <ChatWidgetInternal
@@ -394,8 +448,13 @@ export function ChatWidget({
         placeholder={placeholder}
         greeting={greeting}
         defaultOpen={defaultOpen}
-        width={width}
-        height={height}
+        width={widthPx}
+        height={heightPx}
+        minWidth={minWidthPx}
+        maxWidth={maxWidthPx}
+        minHeight={minHeightPx}
+        maxHeight={maxHeightPx}
+        resizable={resizable}
         zIndex={zIndex}
         lang={lang}
         icon={icon}

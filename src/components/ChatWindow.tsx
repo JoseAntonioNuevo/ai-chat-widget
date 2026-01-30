@@ -10,6 +10,7 @@ import { LoadingIndicator } from './LoadingIndicator';
 import { ErrorMessage } from './ErrorMessage';
 import { MessageInput } from './MessageInput';
 import { useScrollToBottom } from '../hooks/useScrollToBottom';
+import { ResizeHandles } from './ResizeHandles';
 
 interface ChatWindowProps {
   theme: ResolvedTheme;
@@ -28,11 +29,16 @@ interface ChatWindowProps {
   title?: string;
   headerIcon?: ReactNode;
   placeholder: string;
-  width: string;
-  height: string;
+  width: number;
+  height: number;
   zIndex: number;
   showSuggestions: boolean;
   isClosing?: boolean;
+  // New resize props
+  resizable: boolean;
+  isMobile: boolean;
+  isResizing: boolean;
+  onResizeStart: (corner: 'nw' | 'ne' | 'sw' | 'se', e: React.MouseEvent) => void;
 }
 
 export function ChatWindow({
@@ -57,6 +63,10 @@ export function ChatWindow({
   zIndex,
   showSuggestions,
   isClosing = false,
+  resizable,
+  isMobile,
+  isResizing,
+  onResizeStart,
 }: ChatWindowProps) {
   const { ref: messagesEndRef } = useScrollToBottom([messages]);
 
@@ -71,14 +81,17 @@ export function ChatWindow({
       ? { left: '1rem', right: 'auto' }
       : { right: '1rem', left: 'auto' };
 
+  const mobileWidth = 'calc(100vw - 1rem)';
+  const mobileHeight = 'calc(100vh - 7rem)';
+
   const windowStyle: CSSProperties = {
     position: 'fixed',
     bottom: '6rem',
     ...positionStyles,
     zIndex,
     display: 'flex',
-    height,
-    width,
+    height: isMobile ? mobileHeight : `${height}px`,
+    width: isMobile ? mobileWidth : `${width}px`,
     maxWidth: 'calc(100vw - 2rem)',
     flexDirection: 'column',
     overflow: 'hidden',
@@ -86,6 +99,8 @@ export function ChatWindow({
     border: `1px solid ${theme.border}`,
     backgroundColor: theme.background,
     boxShadow: `0 8px 32px ${theme.primary}40`,
+    // Smooth transitions only when not resizing
+    transition: isResizing ? 'none' : 'width 0.1s ease-out, height 0.1s ease-out',
   };
 
   const headerStyle: CSSProperties = {
@@ -269,6 +284,11 @@ export function ChatWindow({
         isLoading={isLoading}
         autoFocus
       />
+
+      {/* Resize Handles (desktop only, when enabled) */}
+      {resizable && !isMobile && (
+        <ResizeHandles onResizeStart={onResizeStart} isResizing={isResizing} />
+      )}
     </div>
   );
 }
