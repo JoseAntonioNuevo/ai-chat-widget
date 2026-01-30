@@ -14,7 +14,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, Component, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, useMemo, Component, type ReactNode } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import type { ChatWidgetProps, Position, CustomIcons } from './types';
@@ -105,6 +105,7 @@ function ChatWidgetInternal({
   const [isVisible, setIsVisible] = useState(defaultOpen); // Controls DOM presence
   const [isClosing, setIsClosing] = useState(false); // Controls close animation
   const [input, setInput] = useState('');
+  const [sessionId, setSessionId] = useState(() => crypto.randomUUID());
   const [fontLoaded, setFontLoaded] = useState(!loadDefaultFont);
 
   // Handle open/close animations
@@ -147,11 +148,15 @@ function ChatWidgetInternal({
     document.head.appendChild(link);
   }, [loadDefaultFont]);
 
-  // Create transport with custom API endpoint
-  const transport = new DefaultChatTransport({
-    api: apiUrl,
-    body: { lang },
-  });
+  // Create transport with custom API endpoint (memoized to avoid recreating on every render)
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: apiUrl,
+        body: { lang, sessionId },
+      }),
+    [apiUrl, lang, sessionId]
+  );
 
   // Initial messages - include greeting if provided
   const initialMessages = greeting
@@ -174,6 +179,7 @@ function ChatWidgetInternal({
   const handleRestart = useCallback(() => {
     setMessages(initialMessages);
     setInput('');
+    setSessionId(crypto.randomUUID());
   }, [setMessages, initialMessages]);
 
   // Handle escape key to close
