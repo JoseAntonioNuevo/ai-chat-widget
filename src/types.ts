@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { ThemeProp } from './themes/types';
 import type { Lang, Labels } from './i18n/types';
+import type { RateLimitOptions } from './utils/errorTypes';
 
 /**
  * Widget position on screen
@@ -325,8 +326,37 @@ export interface ChatWidgetProps {
    * ```
    */
   showSuggestions?: boolean;
+
+  /**
+   * Rate limit error handling options
+   * Configure auto-retry behavior and backoff settings
+   *
+   * @default { autoRetry: false }
+   *
+   * @example
+   * ```tsx
+   * // Enable auto-retry with defaults
+   * <ChatWidget
+   *   apiUrl="/api/chat"
+   *   rateLimitOptions={{ autoRetry: true }}
+   * />
+   *
+   * // Custom retry settings
+   * <ChatWidget
+   *   apiUrl="/api/chat"
+   *   rateLimitOptions={{
+   *     autoRetry: true,
+   *     maxRetries: 5,
+   *     baseDelayMs: 2000,
+   *     maxDelayMs: 60000,
+   *   }}
+   * />
+   * ```
+   */
+  rateLimitOptions?: RateLimitOptions;
 }
 
 // Re-export types for convenience
 export type { ThemeProp, ThemeConfig, PresetThemeName } from './themes/types';
 export type { Lang, Labels } from './i18n/types';
+export type { RateLimitOptions, ErrorInfo, ErrorType } from './utils/errorTypes';

@@ -14,4 +14,8 @@ export const es: Labels = {
   retry: 'Reintentar',
   suggestionsTitle: 'Preguntas sugeridas',
   restart: 'Reiniciar chat',
+  rateLimitError: 'Demasiadas solicitudes. Por favor espera un momento.',
+  rateLimitRetryIn: 'Puedes reintentar en',
+  autoRetrying: 'Reintentando en',
+  cancelAutoRetry: 'Cancelar',
 };

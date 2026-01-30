@@ -19,12 +19,15 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import type { ChatWidgetProps, Position, CustomIcons } from './types';
 import type { Labels } from './i18n/types';
+import type { RateLimitOptions } from './utils/errorTypes';
 import { resolveTheme } from './themes/resolve';
 import { mergeLabels } from './i18n';
 import { ChatButton } from './components/ChatButton';
 import { ChatWindow } from './components/ChatWindow';
 import { useResize } from './hooks/useResize';
 import { useMobileDetect } from './hooks/useMobileDetect';
+import { classifyError } from './utils/errorClassifier';
+import { useRateLimitRetry } from './hooks/useRateLimitRetry';
 
 // Error boundary to catch rendering failures
 class ChatErrorBoundary extends Component<
@@ -84,6 +87,7 @@ interface InternalChatWidgetProps {
   fontFamily: string;
   loadDefaultFont: boolean;
   showSuggestions: boolean;
+  rateLimitOptions: RateLimitOptions;
 }
 
 // Animation duration in ms
@@ -112,6 +116,7 @@ function ChatWidgetInternal({
   fontFamily,
   loadDefaultFont,
   showSuggestions,
+  rateLimitOptions,
 }: InternalChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [isVisible, setIsVisible] = useState(defaultOpen); // Controls DOM presence
@@ -200,6 +205,21 @@ function ChatWidgetInternal({
 
   const isLoading = status === 'streaming' || status === 'submitted';
 
+  // Classify error for rate limit detection
+  const errorInfo = useMemo(() => classifyError(error), [error]);
+
+  // Rate limit retry handling
+  const {
+    countdown,
+    isAutoRetrying,
+    cancelAutoRetry,
+    manualRetry,
+  } = useRateLimitRetry({
+    errorInfo,
+    onRetry: () => regenerate(),
+    ...rateLimitOptions,
+  });
+
   const handleRestart = useCallback(() => {
     setMessages(initialMessages);
     setInput('');
@@ -227,8 +247,13 @@ function ChatWidgetInternal({
   }, [input, isLoading, sendMessage]);
 
   const handleRetry = useCallback(() => {
-    regenerate();
-  }, [regenerate]);
+    // Use manualRetry for rate limit errors (resets attempt counter)
+    if (errorInfo?.type === 'rate_limit') {
+      manualRetry();
+    } else {
+      regenerate();
+    }
+  }, [errorInfo, manualRetry, regenerate]);
 
   const handleSuggestionSelect = useCallback((suggestion: string) => {
     if (isLoading) return;
@@ -265,6 +290,10 @@ function ChatWidgetInternal({
           isMobile={isMobile}
           isResizing={isResizing}
           onResizeStart={handleResizeStart}
+          errorInfo={errorInfo}
+          countdown={countdown}
+          isAutoRetrying={isAutoRetrying}
+          onCancelAutoRetry={cancelAutoRetry}
         />
       )}
 
@@ -416,6 +445,7 @@ export function ChatWidget({
   headerIcon,
   fontFamily: customFontFamily,
   showSuggestions = true,
+  rateLimitOptions = {},
 }: ChatWidgetProps) {
   const theme = resolveTheme(themeProp);
   const labels = mergeLabels(lang, customLabels);
@@ -462,6 +492,7 @@ export function ChatWidget({
         fontFamily={fontFamily}
         loadDefaultFont={loadDefaultFont}
         showSuggestions={showSuggestions}
+        rateLimitOptions={rateLimitOptions}
       />
     </ChatErrorBoundary>
   );

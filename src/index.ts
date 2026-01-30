@@ -68,6 +68,9 @@ export type {
   Lang,
   Labels,
   CustomIcons,
+  RateLimitOptions,
+  ErrorInfo,
+  ErrorType,
 } from './types';
 
 // Theme system
@@ -93,4 +96,7 @@ export {
 } from './components';
 
 // Utilities
-export { getMessageText } from './utils/messageHelpers';
+export { getMessageText, classifyError, isRateLimitError } from './utils';
+
+// Hooks
+export { useRateLimitRetry } from './hooks/useRateLimitRetry';

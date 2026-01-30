@@ -4,6 +4,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import type { UIMessage } from 'ai';
 import type { ResolvedTheme } from '../themes/types';
 import type { Position, Labels } from '../types';
+import type { ErrorInfo } from '../utils/errorTypes';
 import { CloseIcon, RestartIcon } from './Icons';
 import { MessageBubble } from './MessageBubble';
 import { LoadingIndicator } from './LoadingIndicator';
@@ -39,6 +40,11 @@ interface ChatWindowProps {
   isMobile: boolean;
   isResizing: boolean;
   onResizeStart: (corner: 'nw' | 'ne' | 'sw' | 'se', e: React.MouseEvent) => void;
+  // Rate limit error handling props
+  errorInfo?: ErrorInfo | null;
+  countdown?: number;
+  isAutoRetrying?: boolean;
+  onCancelAutoRetry?: () => void;
 }
 
 export function ChatWindow({
@@ -67,6 +73,10 @@ export function ChatWindow({
   isMobile,
   isResizing,
   onResizeStart,
+  errorInfo,
+  countdown,
+  isAutoRetrying,
+  onCancelAutoRetry,
 }: ChatWindowProps) {
   const { ref: messagesEndRef } = useScrollToBottom(messages.length, isLoading);
 
@@ -264,8 +274,15 @@ export function ChatWindow({
             <ErrorMessage
               theme={theme}
               errorText={labels.error}
+              rateLimitErrorText={labels.rateLimitError}
               retryText={labels.retry}
+              autoRetryingText={labels.autoRetrying}
+              cancelAutoRetryText={labels.cancelAutoRetry}
               onRetry={onRetry}
+              errorInfo={errorInfo}
+              countdown={countdown}
+              isAutoRetrying={isAutoRetrying}
+              onCancelAutoRetry={onCancelAutoRetry}
             />
           )}
 

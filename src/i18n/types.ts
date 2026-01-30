@@ -34,6 +34,14 @@ export interface Labels {
   suggestionsTitle: string;
   /** Restart chat button label (accessibility) */
   restart: string;
+  /** Rate limit error message */
+  rateLimitError: string;
+  /** Rate limit retry countdown prefix (e.g., "You can retry in") */
+  rateLimitRetryIn: string;
+  /** Auto-retry countdown prefix (e.g., "Retrying in") */
+  autoRetrying: string;
+  /** Cancel auto-retry button text */
+  cancelAutoRetry: string;
 }
 
 /**

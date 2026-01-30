@@ -38,11 +38,64 @@ interface Labels {
     suggestionsTitle: string;
     /** Restart chat button label (accessibility) */
     restart: string;
+    /** Rate limit error message */
+    rateLimitError: string;
+    /** Rate limit retry countdown prefix (e.g., "You can retry in") */
+    rateLimitRetryIn: string;
+    /** Auto-retry countdown prefix (e.g., "Retrying in") */
+    autoRetrying: string;
+    /** Cancel auto-retry button text */
+    cancelAutoRetry: string;
 }
 /**
  * Built-in translations object
  */
 type Translations = Record<BuiltInLang, Labels>;
+
+/**
+ * Error type classification
+ */
+type ErrorType = 'rate_limit' | 'network' | 'server' | 'auth' | 'generic';
+/**
+ * Classified error information
+ */
+interface ErrorInfo {
+    /** Type of error */
+    type: ErrorType;
+    /** Original error object */
+    originalError: Error;
+    /** HTTP status code if available */
+    statusCode?: number;
+    /** Seconds to wait before retrying (from server or calculated) */
+    retryAfterSeconds?: number;
+    /** Whether this error type can be retried */
+    isRetriable: boolean;
+}
+/**
+ * Rate limit handling options
+ */
+interface RateLimitOptions {
+    /**
+     * Enable automatic retry after rate limit
+     * @default false
+     */
+    autoRetry?: boolean;
+    /**
+     * Maximum number of auto-retry attempts
+     * @default 3
+     */
+    maxRetries?: number;
+    /**
+     * Base delay in milliseconds for exponential backoff
+     * @default 1000
+     */
+    baseDelayMs?: number;
+    /**
+     * Maximum delay cap in milliseconds
+     * @default 30000
+     */
+    maxDelayMs?: number;
+}
 
 /**
  * Widget position on screen
@@ -343,6 +396,33 @@ interface ChatWidgetProps {
      * ```
      */
     showSuggestions?: boolean;
+    /**
+     * Rate limit error handling options
+     * Configure auto-retry behavior and backoff settings
+     *
+     * @default { autoRetry: false }
+     *
+     * @example
+     * ```tsx
+     * // Enable auto-retry with defaults
+     * <ChatWidget
+     *   apiUrl="/api/chat"
+     *   rateLimitOptions={{ autoRetry: true }}
+     * />
+     *
+     * // Custom retry settings
+     * <ChatWidget
+     *   apiUrl="/api/chat"
+     *   rateLimitOptions={{
+     *     autoRetry: true,
+     *     maxRetries: 5,
+     *     baseDelayMs: 2000,
+     *     maxDelayMs: 60000,
+     *   }}
+     * />
+     * ```
+     */
+    rateLimitOptions?: RateLimitOptions;
 }
 
 /**
@@ -384,7 +464,7 @@ interface ChatWidgetProps {
  * />
  * ```
  */
-declare function ChatWidget({ apiUrl, theme: themeProp, position, lang, labels: customLabels, greeting, defaultOpen, title: customTitle, placeholder: customPlaceholder, width, height, minWidth, maxWidth, minHeight, maxHeight, resizable, zIndex, icon, headerIcon, fontFamily: customFontFamily, showSuggestions, }: ChatWidgetProps): react_jsx_runtime.JSX.Element;
+declare function ChatWidget({ apiUrl, theme: themeProp, position, lang, labels: customLabels, greeting, defaultOpen, title: customTitle, placeholder: customPlaceholder, width, height, minWidth, maxWidth, minHeight, maxHeight, resizable, zIndex, icon, headerIcon, fontFamily: customFontFamily, showSuggestions, rateLimitOptions, }: ChatWidgetProps): react_jsx_runtime.JSX.Element;
 
 /**
  * Built-in translations (English and Spanish)
@@ -470,8 +550,12 @@ interface ChatWindowProps {
     isMobile: boolean;
     isResizing: boolean;
     onResizeStart: (corner: 'nw' | 'ne' | 'sw' | 'se', e: React.MouseEvent) => void;
+    errorInfo?: ErrorInfo | null;
+    countdown?: number;
+    isAutoRetrying?: boolean;
+    onCancelAutoRetry?: () => void;
 }
-declare function ChatWindow({ theme, position, messages, input, onInputChange, onSubmit, onRetry, onClose, onRestart, onSuggestionSelect, isLoading, error, labels, title, headerIcon, placeholder, width, height, zIndex, showSuggestions, isClosing, resizable, isMobile, isResizing, onResizeStart, }: ChatWindowProps): react_jsx_runtime.JSX.Element;
+declare function ChatWindow({ theme, position, messages, input, onInputChange, onSubmit, onRetry, onClose, onRestart, onSuggestionSelect, isLoading, error, labels, title, headerIcon, placeholder, width, height, zIndex, showSuggestions, isClosing, resizable, isMobile, isResizing, onResizeStart, errorInfo, countdown, isAutoRetrying, onCancelAutoRetry, }: ChatWindowProps): react_jsx_runtime.JSX.Element;
 
 interface MessageBubbleProps {
     message: UIMessage;
@@ -504,10 +588,17 @@ declare function LoadingIndicator({ theme, text }: LoadingIndicatorProps): react
 interface ErrorMessageProps {
     theme: ResolvedTheme;
     errorText: string;
+    rateLimitErrorText: string;
     retryText: string;
+    autoRetryingText: string;
+    cancelAutoRetryText: string;
     onRetry: () => void;
+    errorInfo?: ErrorInfo | null;
+    countdown?: number;
+    isAutoRetrying?: boolean;
+    onCancelAutoRetry?: () => void;
 }
-declare function ErrorMessage({ theme, errorText, retryText, onRetry }: ErrorMessageProps): react_jsx_runtime.JSX.Element;
+declare function ErrorMessage({ theme, errorText, rateLimitErrorText, retryText, autoRetryingText, cancelAutoRetryText, onRetry, errorInfo, countdown, isAutoRetrying, onCancelAutoRetry, }: ErrorMessageProps): react_jsx_runtime.JSX.Element;
 
 interface SuggestionBoxProps {
     suggestions: string[];
@@ -526,6 +617,38 @@ declare function CloseIcon({ size, style }: IconProps): react_jsx_runtime.JSX.El
 declare function SendIcon({ size, style }: IconProps): react_jsx_runtime.JSX.Element;
 
 /**
+ * Classify an error and extract relevant information
+ *
+ * @param error - Error object from useChat or API call
+ * @returns ErrorInfo object with classification, or null if error is undefined
+ *
+ * @example
+ * ```tsx
+ * const { error } = useChat({ ... });
+ * const errorInfo = classifyError(error);
+ *
+ * if (errorInfo?.type === 'rate_limit') {
+ *   console.log('Rate limited! Retry after:', errorInfo.retryAfterSeconds);
+ * }
+ * ```
+ */
+declare function classifyError(error: Error | undefined): ErrorInfo | null;
+/**
+ * Quick check if an error is a rate limit error
+ *
+ * @param error - Error object to check
+ * @returns true if the error is a rate limit error
+ *
+ * @example
+ * ```tsx
+ * if (isRateLimitError(error)) {
+ *   showRateLimitMessage();
+ * }
+ * ```
+ */
+declare function isRateLimitError(error: Error | undefined): boolean;
+
+/**
  * Extract text content from a UIMessage's parts array
  *
  * @param message - UIMessage from Vercel AI SDK v6
@@ -533,4 +656,39 @@ declare function SendIcon({ size, style }: IconProps): react_jsx_runtime.JSX.Ele
  */
 declare function getMessageText(message: UIMessage): string;
 
-export { type BuiltInLang, ChatButton, ChatIcon, ChatWidget, type ChatWidgetProps, ChatWindow, CloseIcon, type CustomIcons, ErrorMessage, type Labels, type Lang, LoadingIndicator, MessageBubble, MessageInput, type Position, ResolvedTheme, SendIcon, SuggestionBox, ThemeProp, ChatWidget as default, getLabels, getMessageText, mergeLabels, translations };
+interface UseRateLimitRetryOptions extends RateLimitOptions {
+    errorInfo: ErrorInfo | null;
+    onRetry: () => void;
+}
+interface UseRateLimitRetryResult {
+    /** Current countdown in seconds (0 when not counting down) */
+    countdown: number;
+    /** Whether auto-retry is currently active */
+    isAutoRetrying: boolean;
+    /** Current retry attempt number (1-based) */
+    retryAttempt: number;
+    /** Cancel the current auto-retry */
+    cancelAutoRetry: () => void;
+    /** Manually trigger retry (resets attempt counter) */
+    manualRetry: () => void;
+}
+/**
+ * Hook for handling rate limit errors with countdown and auto-retry
+ *
+ * @example
+ * ```tsx
+ * const { countdown, isAutoRetrying, cancelAutoRetry, manualRetry } = useRateLimitRetry({
+ *   errorInfo,
+ *   onRetry: handleRetry,
+ *   autoRetry: true,
+ *   maxRetries: 3,
+ * });
+ *
+ * if (countdown > 0) {
+ *   return <div>Retry in {countdown}s</div>;
+ * }
+ * ```
+ */
+declare function useRateLimitRetry({ errorInfo, onRetry, autoRetry, maxRetries, baseDelayMs, maxDelayMs, }: UseRateLimitRetryOptions): UseRateLimitRetryResult;
+
+export { type BuiltInLang, ChatButton, ChatIcon, ChatWidget, type ChatWidgetProps, ChatWindow, CloseIcon, type CustomIcons, type ErrorInfo, ErrorMessage, type ErrorType, type Labels, type Lang, LoadingIndicator, MessageBubble, MessageInput, type Position, type RateLimitOptions, ResolvedTheme, SendIcon, SuggestionBox, ThemeProp, classifyError, ChatWidget as default, getLabels, getMessageText, isRateLimitError, mergeLabels, translations, useRateLimitRetry };

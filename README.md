@@ -23,6 +23,7 @@ AI Chat Widget is an open-source React component that adds a beautiful, function
 - **Markdown Support** - Renders formatted text, code blocks, lists
 - **Context-Based Suggestions** - Clickable follow-up questions after AI responses
 - **Restart Chat Button** - Clear conversation and start fresh from header
+- **Smart Rate Limit Handling** - Auto-detects 429 errors with optional auto-retry
 - **Lightweight** - ~15KB minified, lazy-loads heavy dependencies
 - **Accessible** - Keyboard navigation, ARIA labels, screen reader support
 - **Internationalization** - English and Spanish included, easy to extend
@@ -39,6 +40,7 @@ AI Chat Widget is an open-source React component that adds a beautiful, function
 - [Customizing Colors](#customizing-colors)
 - [All Customizable Props](#all-customizable-props)
 - [Customizing Labels](#customizing-labels)
+- [Rate Limit Handling](#rate-limit-handling)
 - [Custom Icons](#custom-icons)
 - [Backend Requirements](#backend-requirements)
 - [Framework Integration](#framework-integration)
@@ -392,6 +394,7 @@ Here's a complete reference of all props you can pass to `ChatWidget`:
 |------|------|---------|-------------|
 | `defaultOpen` | `boolean` | `false` | Start with chat window open |
 | `showSuggestions` | `boolean` | `true` | Show clickable suggestion boxes below AI responses |
+| `rateLimitOptions` | `RateLimitOptions` | `{ autoRetry: false }` | Rate limit error handling options (see [Rate Limit Handling](#rate-limit-handling)) |
 
 ### Resizing Props
 
@@ -493,6 +496,10 @@ The `lang` prop accepts any string and is sent to your backend API, allowing you
 | `retry` | `'Retry'` | `'Reintentar'` | Retry button text |
 | `suggestionsTitle` | `'Suggested questions'` | `'Preguntas sugeridas'` | Suggestions section title |
 | `restart` | `'Restart chat'` | `'Reiniciar chat'` | Restart button (accessibility) |
+| `rateLimitError` | `'Too many requests...'` | `'Demasiadas solicitudes...'` | Rate limit error message |
+| `rateLimitRetryIn` | `'You can retry in'` | `'Puedes reintentar en'` | Retry countdown prefix |
+| `autoRetrying` | `'Retrying in'` | `'Reintentando en'` | Auto-retry countdown prefix |
+| `cancelAutoRetry` | `'Cancel'` | `'Cancelar'` | Cancel auto-retry button |
 
 ### Partial Override
 
@@ -796,6 +803,110 @@ The header icon container is 24x24 pixels. Your icon or image will be centered w
 - **SVG icons**: Use `size={20}` or similar for best fit
 - **Images**: Will be contained within 24x24; use CSS for exact sizing
 - **Emoji**: Displayed at 1.25rem for good visibility
+
+---
+
+## Rate Limit Handling
+
+The widget includes intelligent rate limit error detection and handling. When your API returns a 429 status or rate limit error, the widget automatically:
+
+- Shows a specific "Too many requests" message instead of the generic error
+- Displays a countdown timer showing when retry is available
+- Optionally auto-retries with exponential backoff
+
+### Basic Usage
+
+By default, rate limit errors show a specific message with manual retry:
+
+```tsx
+// Rate limit messages are shown automatically, no config needed
+<ChatWidget apiUrl="/api/chat" />
+```
+
+### Enable Auto-Retry
+
+Enable automatic retry with exponential backoff:
+
+```tsx
+<ChatWidget
+  apiUrl="/api/chat"
+  rateLimitOptions={{ autoRetry: true }}
+/>
+```
+
+### Custom Retry Settings
+
+Fine-tune the retry behavior:
+
+```tsx
+<ChatWidget
+  apiUrl="/api/chat"
+  rateLimitOptions={{
+    autoRetry: true,
+    maxRetries: 5,        // Max retry attempts (default: 3)
+    baseDelayMs: 2000,    // Initial delay in ms (default: 1000)
+    maxDelayMs: 60000,    // Maximum delay cap in ms (default: 30000)
+  }}
+/>
+```
+
+### RateLimitOptions Reference
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `autoRetry` | `boolean` | `false` | Enable automatic retry after rate limit |
+| `maxRetries` | `number` | `3` | Maximum number of auto-retry attempts |
+| `baseDelayMs` | `number` | `1000` | Base delay in milliseconds for exponential backoff |
+| `maxDelayMs` | `number` | `30000` | Maximum delay cap in milliseconds |
+
+### How It Works
+
+1. **Error Detection**: The widget detects rate limits via:
+   - HTTP status code 429
+   - Error messages containing "rate limit", "too many requests", "quota exceeded", etc.
+   - `Retry-After` header (if provided by your API)
+
+2. **Countdown Timer**: Shows seconds until retry is available
+
+3. **Exponential Backoff**: Each retry attempt doubles the wait time (with jitter):
+   - Attempt 1: ~1 second
+   - Attempt 2: ~2 seconds
+   - Attempt 3: ~4 seconds
+   - And so on, up to `maxDelayMs`
+
+4. **Server Retry-After**: If your API includes a `Retry-After` header, the widget respects it
+
+### Using the Utilities Directly
+
+For advanced use cases, you can import the error classification utilities:
+
+```tsx
+import { classifyError, isRateLimitError } from '@joseantonionuevo/ai-chat-widget';
+
+// Quick check
+if (isRateLimitError(error)) {
+  console.log('Rate limited!');
+}
+
+// Full classification
+const errorInfo = classifyError(error);
+if (errorInfo?.type === 'rate_limit') {
+  console.log('Retry after:', errorInfo.retryAfterSeconds, 'seconds');
+  console.log('HTTP status:', errorInfo.statusCode);
+}
+```
+
+### Error Types
+
+The classifier categorizes errors into these types:
+
+| Type | Description |
+|------|-------------|
+| `rate_limit` | Too many requests (429 or matching message patterns) |
+| `network` | Connection, timeout, or offline errors |
+| `server` | Server errors (5xx status codes) |
+| `auth` | Authentication/authorization errors (401, 403) |
+| `generic` | All other errors |
 
 ---
 
@@ -1598,6 +1709,45 @@ function CustomChat() {
 }
 ```
 
+### Using the Rate Limit Hook
+
+For custom error handling, use the `useRateLimitRetry` hook:
+
+```tsx
+import { useRateLimitRetry, classifyError } from '@joseantonionuevo/ai-chat-widget';
+
+function CustomErrorHandler({ error, onRetry }) {
+  const errorInfo = classifyError(error);
+
+  const {
+    countdown,
+    isAutoRetrying,
+    cancelAutoRetry,
+    manualRetry,
+  } = useRateLimitRetry({
+    errorInfo,
+    onRetry,
+    autoRetry: true,
+    maxRetries: 3,
+  });
+
+  if (errorInfo?.type === 'rate_limit') {
+    return (
+      <div>
+        <p>Rate limited! {countdown > 0 && `Retry in ${countdown}s`}</p>
+        {isAutoRetrying ? (
+          <button onClick={cancelAutoRetry}>Cancel</button>
+        ) : (
+          <button onClick={manualRetry}>Retry Now</button>
+        )}
+      </div>
+    );
+  }
+
+  return <p>Error: {error.message}</p>;
+}
+```
+
 ### Conditional Rendering
 
 ```tsx
@@ -1636,6 +1786,11 @@ import type {
   // i18n types
   Lang,
   Labels,
+
+  // Error handling types
+  RateLimitOptions,
+  ErrorInfo,
+  ErrorType,
 
   // Misc
   Position,
