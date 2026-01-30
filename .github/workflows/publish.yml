@@ -3,7 +3,7 @@ name: Publish Package
 on:
   push:
     tags:
-      - 'v*'  # Triggers on v1.0.0, v1.2.3, etc.
+      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -58,8 +58,8 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Publish to npm
-        run: pnpm publish --access public --no-git-checks
+      - name: Publish to npm with provenance
+        run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -90,6 +90,6 @@ jobs:
         run: pnpm build
 
       - name: Publish to GitHub Packages
-        run: pnpm publish --access public --no-git-checks
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
