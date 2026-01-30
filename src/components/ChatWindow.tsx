@@ -68,7 +68,7 @@ export function ChatWindow({
   isResizing,
   onResizeStart,
 }: ChatWindowProps) {
-  const { ref: messagesEndRef } = useScrollToBottom([messages]);
+  const { ref: messagesEndRef } = useScrollToBottom(messages.length, isLoading);
 
   // Find the last assistant message index for showing suggestions
   const lastAssistantMessageIndex = messages.reduceRight(
