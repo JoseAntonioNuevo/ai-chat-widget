@@ -1,0 +1,90 @@
+{
+  "name": "@joseantonionuevo/ai-chat-widget",
+  "version": "1.2.0",
+  "description": "A ready-to-use, customizable chat widget for AI applications using Vercel AI SDK v6",
+  "author": "Jose Antonio Nuevo",
+  "license": "MIT",
+  "private": false,
+  "type": "module",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./themes": {
+      "types": "./dist/themes/index.d.ts",
+      "import": "./dist/themes/index.js",
+      "require": "./dist/themes/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JoseAntonioNuevo/ai-chat-widget.git"
+  },
+  "homepage": "https://github.com/JoseAntonioNuevo/ai-chat-widget#readme",
+  "bugs": {
+    "url": "https://github.com/JoseAntonioNuevo/ai-chat-widget/issues"
+  },
+  "keywords": [
+    "chat",
+    "widget",
+    "ai",
+    "chatbot",
+    "vercel-ai-sdk",
+    "react",
+    "streaming",
+    "llm",
+    "gpt",
+    "claude",
+    "openai"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "@ai-sdk/react": ">=3.0.0",
+    "ai": ">=6.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react-markdown": {
+      "optional": true
+    },
+    "remark-gfm": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@ai-sdk/react": "^3.0.64",
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^22.19.7",
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "ai": "^6.0.62",
+    "eslint": "^9.39.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0"
+  }
+}
