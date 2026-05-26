@@ -89,6 +89,7 @@ interface InternalChatWidgetProps {
   loadDefaultFont: boolean;
   showSuggestions: boolean;
   rateLimitOptions: RateLimitOptions;
+  onMessageSent?: () => void;
 }
 
 // Animation duration in ms
@@ -118,6 +119,7 @@ function ChatWidgetInternal({
   loadDefaultFont,
   showSuggestions,
   rateLimitOptions,
+  onMessageSent,
 }: InternalChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [isVisible, setIsVisible] = useState(defaultOpen); // Controls DOM presence
@@ -245,7 +247,8 @@ function ChatWidgetInternal({
     if (!input.trim() || isLoading) return;
     sendMessage({ text: input });
     setInput('');
-  }, [input, isLoading, sendMessage]);
+    onMessageSent?.();
+  }, [input, isLoading, sendMessage, onMessageSent]);
 
   const handleRetry = useCallback(() => {
     // Use manualRetry for rate limit errors (resets attempt counter)
@@ -259,7 +262,8 @@ function ChatWidgetInternal({
   const handleSuggestionSelect = useCallback((suggestion: string) => {
     if (isLoading) return;
     sendMessage({ text: suggestion });
-  }, [isLoading, sendMessage]);
+    onMessageSent?.();
+  }, [isLoading, sendMessage, onMessageSent]);
 
   return (
     <div className="ai-chat-widget-root" style={{ fontFamily }}>
@@ -447,6 +451,7 @@ export function ChatWidget({
   fontFamily: customFontFamily,
   showSuggestions = true,
   rateLimitOptions = {},
+  onMessageSent,
 }: ChatWidgetProps) {
   // Validate API URL for security (logs warnings/errors)
   const isValidUrl = validateAndWarnApiUrl(apiUrl);
@@ -503,6 +508,7 @@ export function ChatWidget({
         loadDefaultFont={loadDefaultFont}
         showSuggestions={showSuggestions}
         rateLimitOptions={rateLimitOptions}
+        onMessageSent={onMessageSent}
       />
     </ChatErrorBoundary>
   );

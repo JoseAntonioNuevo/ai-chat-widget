@@ -354,6 +354,25 @@ export interface ChatWidgetProps {
    * ```
    */
   rateLimitOptions?: RateLimitOptions;
+
+  /**
+   * Callback fired immediately after the user submits a message — either via
+   * the send form (button or Enter keydown) or by selecting a suggestion
+   * chip. Useful for analytics: count user sends without inspecting widget
+   * DOM or message content.
+   *
+   * Not called for assistant replies, retries, regenerations, or
+   * widget-internal events.
+   *
+   * @example
+   * ```tsx
+   * <ChatWidget
+   *   apiUrl="/api/chat"
+   *   onMessageSent={() => analytics.track('chat_message_sent')}
+   * />
+   * ```
+   */
+  onMessageSent?: () => void;
 }
 
 // Re-export types for convenience
