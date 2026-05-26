@@ -464,7 +464,7 @@ interface ChatWidgetProps {
  * />
  * ```
  */
-declare function ChatWidget({ apiUrl, theme: themeProp, position, lang, labels: customLabels, greeting, defaultOpen, title: customTitle, placeholder: customPlaceholder, width, height, minWidth, maxWidth, minHeight, maxHeight, resizable, zIndex, icon, headerIcon, fontFamily: customFontFamily, showSuggestions, rateLimitOptions, }: ChatWidgetProps): react_jsx_runtime.JSX.Element;
+declare function ChatWidget({ apiUrl, theme: themeProp, position, lang, labels: customLabels, greeting, defaultOpen, title: customTitle, placeholder: customPlaceholder, width, height, minWidth, maxWidth, minHeight, maxHeight, resizable, zIndex, icon, headerIcon, fontFamily: customFontFamily, showSuggestions, rateLimitOptions, }: ChatWidgetProps): react_jsx_runtime.JSX.Element | null;
 
 /**
  * Built-in translations (English and Spanish)
@@ -656,6 +656,36 @@ declare function isRateLimitError(error: Error | undefined): boolean;
  */
 declare function getMessageText(message: UIMessage): string;
 
+/**
+ * URL validation utilities for security
+ *
+ * Validates API URLs to prevent:
+ * - javascript: protocol injection
+ * - data: protocol injection
+ * - Invalid URL formats
+ * - HTTP in production (warning only)
+ */
+interface UrlValidationResult {
+    isValid: boolean;
+    error?: string;
+    warning?: string;
+}
+/**
+ * Validates an API URL for security
+ *
+ * @param url - The URL to validate
+ * @param options - Validation options
+ * @returns Validation result with isValid, error, and warning
+ */
+declare function validateApiUrl(url: string, options?: {
+    warnOnHttp?: boolean;
+}): UrlValidationResult;
+/**
+ * Validates URL and logs warnings/errors
+ * Returns true if URL is safe to use
+ */
+declare function validateAndWarnApiUrl(url: string): boolean;
+
 interface UseRateLimitRetryOptions extends RateLimitOptions {
     errorInfo: ErrorInfo | null;
     onRetry: () => void;
@@ -691,4 +721,4 @@ interface UseRateLimitRetryResult {
  */
 declare function useRateLimitRetry({ errorInfo, onRetry, autoRetry, maxRetries, baseDelayMs, maxDelayMs, }: UseRateLimitRetryOptions): UseRateLimitRetryResult;
 
-export { type BuiltInLang, ChatButton, ChatIcon, ChatWidget, type ChatWidgetProps, ChatWindow, CloseIcon, type CustomIcons, type ErrorInfo, ErrorMessage, type ErrorType, type Labels, type Lang, LoadingIndicator, MessageBubble, MessageInput, type Position, type RateLimitOptions, ResolvedTheme, SendIcon, SuggestionBox, ThemeProp, classifyError, ChatWidget as default, getLabels, getMessageText, isRateLimitError, mergeLabels, translations, useRateLimitRetry };
+export { type BuiltInLang, ChatButton, ChatIcon, ChatWidget, type ChatWidgetProps, ChatWindow, CloseIcon, type CustomIcons, type ErrorInfo, ErrorMessage, type ErrorType, type Labels, type Lang, LoadingIndicator, MessageBubble, MessageInput, type Position, type RateLimitOptions, ResolvedTheme, SendIcon, SuggestionBox, ThemeProp, type UrlValidationResult, classifyError, ChatWidget as default, getLabels, getMessageText, isRateLimitError, mergeLabels, translations, useRateLimitRetry, validateAndWarnApiUrl, validateApiUrl };

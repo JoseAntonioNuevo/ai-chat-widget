@@ -28,6 +28,7 @@ import { useResize } from './hooks/useResize';
 import { useMobileDetect } from './hooks/useMobileDetect';
 import { classifyError } from './utils/errorClassifier';
 import { useRateLimitRetry } from './hooks/useRateLimitRetry';
+import { validateAndWarnApiUrl } from './utils/urlValidator';
 
 // Error boundary to catch rendering failures
 class ChatErrorBoundary extends Component<
@@ -447,6 +448,15 @@ export function ChatWidget({
   showSuggestions = true,
   rateLimitOptions = {},
 }: ChatWidgetProps) {
+  // Validate API URL for security (logs warnings/errors)
+  const isValidUrl = validateAndWarnApiUrl(apiUrl);
+
+  // Don't render if URL is insecure (e.g., javascript: protocol)
+  if (!isValidUrl) {
+    console.error('[ai-chat-widget] Widget not rendered due to invalid apiUrl');
+    return null;
+  }
+
   const theme = resolveTheme(themeProp);
   const labels = mergeLabels(lang, customLabels);
   // Title: if explicitly set to '' or false, hide it; otherwise use custom or labels default

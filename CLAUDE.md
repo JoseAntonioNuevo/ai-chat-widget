@@ -82,7 +82,11 @@ A public, open-source npm package that provides a ready-to-use, customizable flo
 │   │   └── useScrollToBottom.ts # Auto-scroll on new messages
 │   │
 │   └── utils/                   # Utilities
-│       └── messageHelpers.ts    # Extract text from UIMessage
+│       ├── index.ts             # Utility exports
+│       ├── messageHelpers.ts    # Extract text from UIMessage
+│       ├── errorClassifier.ts   # Error type detection (rate limit, network, etc.)
+│       ├── errorTypes.ts        # Error type definitions
+│       └── urlValidator.ts      # API URL security validation
 │
 ├── dist/                        # Build output (generated)
 │   ├── index.js                 # ESM bundle
@@ -545,3 +549,49 @@ pnpm add /Users/jose/Documents/ai-chat-widget
 3. **This is a PUBLIC package** - No Me Growth branding or secrets
 4. **Peer dependencies are external** - Not bundled, user must install
 5. **Dark mode by default** - Midnight theme is the default
+
+
+## Browser Testing with `browser-use`
+
+When asked to "pruébalo en el navegador" or "prueba en el navegador", use the `browser-use` CLI:
+```bash
+source ~/.bashrc && browser-use open <url>
+browser-use state
+browser-use screenshot /tmp/browser-test.png
+browser-use close
+```
+If no URL is provided, use the project dev server URL (e.g., localhost:3000). Always show the screenshot.
+
+
+## Use Impeccable Skill for All Visual/UI/Frontend Work
+
+**MANDATORY**: When implementing ANY visual, styling, or frontend task, always use the **impeccable** skill suite:
+- `impeccable:frontend-design` — New components/pages
+- `impeccable:polish` — Final quality pass (alignment, spacing, consistency)
+- `impeccable:critique` — Evaluate design effectiveness
+- `impeccable:animate` — Animations, transitions, micro-interactions
+- `impeccable:adapt` — Responsive design across devices
+- `impeccable:audit` — Comprehensive UI audit (a11y, perf, theming)
+- `impeccable:colorize` — Add strategic color
+- `impeccable:bolder` — Make designs more impactful
+- `impeccable:quieter` — Tone down aggressive designs
+- `impeccable:distill` — Simplify to essence
+- `impeccable:clarify` — Improve UX copy and labels
+- `impeccable:harden` — Error handling, i18n, edge cases
+- `impeccable:extract` — Extract reusable components
+- `impeccable:normalize` — Match design system
+- `impeccable:onboard` — Onboarding flows and empty states
+- `impeccable:delight` — Add personality and joy
+Multiple sub-skills can be chained (e.g., frontend-design → polish → adapt).
+
+
+## Auto-Use Skills — Use Without Being Asked
+
+**MANDATORY**: When the user's request matches a skill's domain, use it automatically:
+- **Documents**: `pdf` (read/extract/fill), `docx` (Word), `pptx` (slides), `xlsx` (Excel), `doc-coauthoring` (collaborative)
+- **Design**: `canvas-design` (graphics/posters), `algorithmic-art` (generative), `theme-factory` (color schemes), `web-artifacts-builder` (calculators/dashboards)
+- **Dev**: `systematic-debugging` (bug reports), `test-driven-development` (TDD), `deep-research` (in-depth research), `context-engineering-collection` (token optimization), `skill-creator` (create new skills), `security-audit` (security review), `react-doctor` (React changes)
+- **SEO**: `seo-audit`, `seo-page`, `seo-content`, `seo-technical`, `seo-schema`, `seo-sitemap`, `seo-images`, `seo-hreflang`, `seo-geo`, `seo-competitor-pages`, `seo-programmatic`, `seo-plan`, `ai-seo`, `schema-markup`, `site-architecture`
+- **Marketing**: `copywriting`, `copy-editing`, `email-sequence`, `cold-email`, `page-cro`, `form-cro`, `signup-flow-cro`, `onboarding-cro`, `popup-cro`, `paywall-upgrade-cro`, `ab-test-setup`, `analytics-tracking`, `content-strategy`, `social-content`, `paid-ads`, `lead-magnets`, `launch-strategy`, `pricing-strategy`, `referral-program`, `churn-prevention`, `competitor-alternatives`, `free-tool-strategy`, `marketing-ideas`, `marketing-psychology`, `product-marketing-context`, `revops`, `sales-enablement`, `ad-creative`
+- **Brand/Writing**: `brand-guidelines`, `brainstorming`, `writing-skills`, `writing-plans`
+- **Workflow**: `dispatching-parallel-agents`, `subagent-driven-development`, `executing-plans`, `finishing-a-development-branch`, `using-git-worktrees`, `requesting-code-review`, `receiving-code-review`, `verification-before-completion`

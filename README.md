@@ -45,6 +45,7 @@ AI Chat Widget is an open-source React component that adds a beautiful, function
 - [Backend Requirements](#backend-requirements)
 - [Framework Integration](#framework-integration)
 - [Advanced Usage](#advanced-usage)
+- [Security](#security)
 - [TypeScript](#typescript)
 - [Contributing](#contributing)
 - [License](#license)
@@ -1765,6 +1766,124 @@ function ConditionalChat() {
   return <ChatWidget apiUrl="/api/chat" />;
 }
 ```
+
+---
+
+## Security
+
+This widget is designed with security in mind. Here's what you need to know:
+
+### Widget Security Features
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| **XSS Protection** | Built-in | React's automatic escaping prevents XSS. Markdown uses react-markdown's safe defaults. |
+| **URL Validation** | Built-in | Blocks dangerous protocols (javascript:, data:, vbscript:). Warns on HTTP in production. |
+| **No Dynamic Code Execution** | Built-in | No dynamic code execution anywhere in the widget. |
+| **Secure Session IDs** | Built-in | Uses `crypto.randomUUID()` for cryptographically secure session identifiers. |
+| **Error Sanitization** | Built-in | Error messages shown to users are predefined, preventing stack trace exposure. |
+| **Input Handling** | Built-in | All user input is trimmed and validated before sending. |
+
+### Backend Security Requirements
+
+The widget delegates security to your backend. **You must implement**:
+
+| Requirement | Description |
+|-------------|-------------|
+| **HTTPS** | Always use HTTPS for your API endpoint in production. |
+| **CSRF Protection** | Implement CSRF tokens or use SameSite cookies. |
+| **Rate Limiting** | Limit requests per user/IP to prevent abuse. |
+| **Input Validation** | Validate and sanitize all message content server-side. |
+| **Authentication** | Implement auth if chat should be user-specific. |
+| **Session Isolation** | Ensure users can't access each other's chat history. |
+
+### API URL Validation
+
+The widget automatically validates the `apiUrl` prop:
+
+```tsx
+// These are BLOCKED (widget won't render):
+<ChatWidget apiUrl="javascript:alert('xss')" />  // Dangerous protocol
+<ChatWidget apiUrl="data:text/html,<script>..." />  // Dangerous protocol
+<ChatWidget apiUrl="" />  // Empty URL
+
+// These are ALLOWED:
+<ChatWidget apiUrl="https://api.example.com/chat" />  // Absolute HTTPS
+<ChatWidget apiUrl="http://localhost:3000/api/chat" />  // HTTP (development)
+<ChatWidget apiUrl="/api/chat" />  // Relative path (inherits page protocol)
+
+// This triggers a WARNING (but still works):
+// Using http:// when your page is served over https://
+// Mixed content may cause browser errors
+```
+
+### Markdown Rendering
+
+Assistant messages are rendered as Markdown using `react-markdown`, which is XSS-safe by default:
+
+- **HTML is NOT rendered** - Tags like `<script>` appear as text
+- **Only markdown syntax** - Bold, links, code blocks, lists, etc.
+- **No custom plugins** - The widget doesn't enable any HTML-rendering plugins
+
+**Important:** If you customize the widget and add markdown plugins like `rehype-raw`, you must sanitize HTML yourself.
+
+### Data Privacy
+
+| Data | Storage | Sent to Server |
+|------|---------|----------------|
+| Chat messages | Not stored locally | Yes (to your API) |
+| Session ID | Memory only | Yes (per request) |
+| Window size | localStorage | No |
+| User preferences | Not collected | No |
+
+### Content Security Policy (CSP)
+
+If your site uses CSP, add these directives:
+
+```
+# Required for widget functionality
+style-src 'unsafe-inline';  # For dynamic styles
+script-src 'self';          # Widget scripts
+
+# Required for default font (Inter from Google Fonts)
+font-src https://fonts.gstatic.com;
+style-src https://fonts.googleapis.com;
+
+# Or use a custom font to avoid Google Fonts
+```
+
+To avoid Google Fonts entirely:
+
+```tsx
+<ChatWidget
+  apiUrl="/api/chat"
+  fontFamily="system-ui, -apple-system, sans-serif"
+/>
+```
+
+### Security Utilities
+
+For advanced use cases, validate URLs programmatically:
+
+```tsx
+import { validateApiUrl, validateAndWarnApiUrl } from '@joseantonionuevo/ai-chat-widget';
+
+// Full validation with result object
+const result = validateApiUrl('https://api.example.com/chat');
+if (!result.isValid) {
+  console.error(result.error);
+}
+if (result.warning) {
+  console.warn(result.warning);
+}
+
+// Quick validation with automatic logging
+const isValid = validateAndWarnApiUrl('https://api.example.com/chat');
+```
+
+### Reporting Security Issues
+
+If you discover a security vulnerability, please report it privately via [GitHub Security Advisories](https://github.com/JoseAntonioNuevo/ai-chat-widget/security/advisories/new) rather than opening a public issue.
 
 ---
 

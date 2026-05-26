@@ -96,7 +96,8 @@ export {
 } from './components';
 
 // Utilities
-export { getMessageText, classifyError, isRateLimitError } from './utils';
+export { getMessageText, classifyError, isRateLimitError, validateApiUrl, validateAndWarnApiUrl } from './utils';
+export type { UrlValidationResult } from './utils';
 
 // Hooks
 export { useRateLimitRetry } from './hooks/useRateLimitRetry';
